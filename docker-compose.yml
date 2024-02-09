@@ -21,6 +21,8 @@ services:
       - payt_network
     depends_on:
       - postgres
+    volumes:
+      - ./:/app
 
 
 volumes:

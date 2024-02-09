@@ -15,4 +15,15 @@ use App\Http\Controllers\RedirectController;
 |
 */
 
-Route::resource('redirects', RedirectController::class);
+
+Route::group(['prefix' => 'redirects'], function () {
+    Route::resource('/', RedirectController::class);
+    
+    Route::get('/{redirect}/stats', function (Request $request) {
+        return response('ok');
+    });
+
+    Route::get('/{redirect}/logs', function (Request $request) {
+        return response('ok');
+    });
+});

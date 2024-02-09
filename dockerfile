@@ -18,9 +18,13 @@ COPY --from=vendor /app .
 
 RUN set -ex \
   && apk --no-cache add \
-    postgresql-dev
+    postgresql-dev \ 
+    gmp-dev
 
-RUN docker-php-ext-install pgsql pdo_pgsql
+RUN docker-php-ext-install \
+    pgsql \
+    pdo_pgsql \
+    gmp
 
 RUN php artisan key:generate
 

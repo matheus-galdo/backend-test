@@ -13,11 +13,10 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('redirect', function (Blueprint $table) {
+        Schema::create('redirects', function (Blueprint $table) {
             $table->id();
-            $table->string('code');
             $table->text('url');
-            $table->enum('status', ['active','inactive']);
+            $table->enum('status', ['active','inactive'])->default("active");
             $table->softDeletes();
             $table->timestamps();
         });
