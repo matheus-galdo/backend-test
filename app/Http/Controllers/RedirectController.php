@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\CreateRedirectRequest;
 use App\Models\Redirect;
 use Illuminate\Http\Request;
+use Vinkla\Hashids\Facades\Hashids;
 
 class RedirectController extends Controller
 {
@@ -15,11 +16,7 @@ class RedirectController extends Controller
      */
     public function index()
     {
-        $data = [
-            "message" => "all good"
-        ];
-        
-        return response()->json($data);
+
     }
 
     /**
@@ -29,10 +26,11 @@ class RedirectController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function store(CreateRedirectRequest $request)
-    {   
+    {
+        //TODO: Validar se aponta pra própria aplicação, usar env com o host do app
         $redirect = Redirect::create([
-            "url"=> $request->url,
-            "status"=> "active",
+            "url" => $request->url,
+            "status" => "active",
         ]);
 
         return response()->json($redirect);
@@ -62,13 +60,27 @@ class RedirectController extends Controller
     }
 
     /**
+     * Togle the status of the specified resource.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function toggleStatus($id)
+    {
+        //
+    }
+
+    /**
      * Remove the specified resource from storage.
      *
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy($redirectCode)
     {
-        //
+        $redirectId = Hashids::decode($redirectCode)[0] ?? null;
+        $redirect = Redirect::findOrFail($redirectId);
+        $redirect->delete();
+        return response($redirect);
     }
 }

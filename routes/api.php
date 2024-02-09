@@ -17,8 +17,8 @@ use App\Http\Controllers\RedirectController;
 
 
 Route::group(['prefix' => 'redirects'], function () {
-    Route::resource('/', RedirectController::class);
-    
+    Route::apiResource('/', RedirectController::class)->parameters(['' => 'redirectCode']);
+
     Route::get('/{redirect}/stats', function (Request $request) {
         return response('ok');
     });
