@@ -86,12 +86,15 @@ class RedirectController extends Controller
 
         // return response()->json($request->query());
         $queryStrings = http_build_query($request->query());
+        // dd($request->header("user-agent"));
 
         RedirectLog::create([
             "redirect_id" => $redirect->getOriginalId(),
             "ip_address" => $request->ip(),
             "query_params" => $queryStrings,
-            "referer" => $request->header("Referer"),
+            "user_agent" => $request->header("user-agent"),
+            "referer" => $request->header("referer"),
+            
         ]);
 
         $fullUrl = $redirect->url;

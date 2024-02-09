@@ -10,7 +10,7 @@ class RedirectLog extends Model
 {
     use HasFactory;
     
-    protected $fillable = ['redirect_id', 'ip_address', 'referer', 'query_params'];
+    protected $fillable = ['redirect_id', 'ip_address', 'referer', 'query_params', 'user_agent'];
     
     public function redirect(): BelongsTo
     {

@@ -19,6 +19,7 @@ return new class extends Migration
             $table->ipAddress('ip_address');
             $table->text('referer')->nullable();
             $table->text('query_params')->nullable();
+            $table->text('user_agent')->nullable();
             $table->timestamps();
 
             $table->foreign('redirect_id')->references('id')->on('redirects');
