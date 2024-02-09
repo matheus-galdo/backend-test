@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+
+use \Vinkla\Hashids\Facades\Hashids;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -19,5 +21,9 @@ class Redirect extends Model
         );
     }
     
+    public static function findFromCode($redirectCode) {
+        $redirectId = Hashids::decode($redirectCode)[0] ?? null;
+        return self::findOrFail($redirectId);
+    }
     protected $fillable = ['code', 'url', 'status'];
 }

@@ -16,7 +16,10 @@ class RedirectController extends Controller
      */
     public function index()
     {
-
+        // TODO: fazer resource que muda o nome de id pra code
+        // TODO: pegar o último acesso, coluna de último acesso na tabela de redirect?
+        $redirect = Redirect::all();
+        return response()->json($redirect);
     }
 
     /**
@@ -60,7 +63,7 @@ class RedirectController extends Controller
     }
 
     /**
-     * Togle the status of the specified resource.
+     * Toggle the status of the specified resource.
      *
      * @param  int  $id
      * @return \Illuminate\Http\Response
@@ -71,6 +74,19 @@ class RedirectController extends Controller
     }
 
     /**
+     * Acess the url of the specified resource.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function accessRedirectUrl($redirectCode)
+    {
+        $redirect = Redirect::findFromCode($redirectCode);
+        //TODO: adicionar um redirectLog para a visita
+        return redirect()->away($redirect->url);
+    }
+
+    /**
      * Remove the specified resource from storage.
      *
      * @param  int  $id
@@ -78,8 +94,7 @@ class RedirectController extends Controller
      */
     public function destroy($redirectCode)
     {
-        $redirectId = Hashids::decode($redirectCode)[0] ?? null;
-        $redirect = Redirect::findOrFail($redirectId);
+        $redirect = Redirect::findFromCode($redirectCode);
         $redirect->delete();
         return response($redirect);
     }
