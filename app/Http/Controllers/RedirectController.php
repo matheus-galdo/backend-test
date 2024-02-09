@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CreateRedirectRequest;
 use App\Models\Redirect;
+use App\Models\RedirectLog;
 use Illuminate\Http\Request;
 use Vinkla\Hashids\Facades\Hashids;
 
@@ -18,7 +19,7 @@ class RedirectController extends Controller
     {
         // TODO: fazer resource que muda o nome de id pra code
         // TODO: pegar o último acesso, coluna de último acesso na tabela de redirect?
-        $redirect = Redirect::all();
+        $redirect = Redirect::withTrashed()->get();
         return response()->json($redirect);
     }
 
@@ -61,7 +62,7 @@ class RedirectController extends Controller
     {
         //
     }
-
+    
     /**
      * Toggle the status of the specified resource.
      *
@@ -70,7 +71,7 @@ class RedirectController extends Controller
      */
     public function toggleStatus($id)
     {
-        //
+        //TODO: checar estado de deleção antes de fazer o toggle
     }
 
     /**
@@ -79,11 +80,33 @@ class RedirectController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function accessRedirectUrl($redirectCode)
+    public function accessRedirectUrl(Request $request, $redirectCode)
     {
         $redirect = Redirect::findFromCode($redirectCode);
-        //TODO: adicionar um redirectLog para a visita
-        return redirect()->away($redirect->url);
+
+        // return response()->json($request->query());
+        $queryStrings = http_build_query($request->query());
+
+        RedirectLog::create([
+            "redirect_id" => $redirect->getOriginalId(),
+            "ip_address" => $request->ip(),
+            "query_params" => $queryStrings,
+            "referer" => $request->header("Referer"),
+        ]);
+
+        $fullUrl = $redirect->url;
+
+        if (strlen($queryStrings) > 0) {
+            $hasQueryParams = str_contains($redirect->url, "?");
+            
+            if(!$hasQueryParams) {
+                $fullUrl .= "?";
+            }
+
+            $fullUrl .= $queryStrings;
+        }
+
+        return redirect()->away($fullUrl);
     }
 
     /**
@@ -94,7 +117,9 @@ class RedirectController extends Controller
      */
     public function destroy($redirectCode)
     {
+        //TODO: fazer DI dessa model
         $redirect = Redirect::findFromCode($redirectCode);
+        $redirect->update(["status" => "inactive"]);
         $redirect->delete();
         return response($redirect);
     }
