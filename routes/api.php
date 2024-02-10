@@ -23,7 +23,5 @@ Route::group(['prefix' => 'redirects'], function () {
         return response('ok');
     });
 
-    Route::get('/{redirect}/logs', function (Request $request) {
-        return response('ok');
-    });
+    Route::get('/{redirect}/logs', [RedirectController::class, 'getRedirectStats']);
 });

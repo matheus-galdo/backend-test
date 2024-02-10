@@ -5,7 +5,10 @@ namespace App\Http\Controllers;
 use App\Http\Requests\CreateRedirectRequest;
 use App\Models\Redirect;
 use App\Models\RedirectLog;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Vinkla\Hashids\Facades\Hashids;
 
 class RedirectController extends Controller
@@ -62,7 +65,7 @@ class RedirectController extends Controller
     {
         //
     }
-    
+
     /**
      * Toggle the status of the specified resource.
      *
@@ -80,13 +83,10 @@ class RedirectController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function accessRedirectUrl(Request $request, $redirectCode)
+    public function accessRedirectUrl(Request $request, $redirectCode): RedirectResponse
     {
         $redirect = Redirect::findFromCode($redirectCode);
-
-        // return response()->json($request->query());
         $queryStrings = http_build_query($request->query());
-        // dd($request->header("user-agent"));
 
         RedirectLog::create([
             "redirect_id" => $redirect->getOriginalId(),
@@ -94,15 +94,14 @@ class RedirectController extends Controller
             "query_params" => $queryStrings,
             "user_agent" => $request->header("user-agent"),
             "referer" => $request->header("referer"),
-            
         ]);
 
         $fullUrl = $redirect->url;
 
         if (strlen($queryStrings) > 0) {
             $hasQueryParams = str_contains($redirect->url, "?");
-            
-            if(!$hasQueryParams) {
+
+            if (!$hasQueryParams) {
                 $fullUrl .= "?";
             }
 
@@ -118,12 +117,18 @@ class RedirectController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($redirectCode)
+    public function destroy($redirectCode): Response
     {
         //TODO: fazer DI dessa model
         $redirect = Redirect::findFromCode($redirectCode);
         $redirect->update(["status" => "inactive"]);
         $redirect->delete();
         return response($redirect);
+    }
+
+    function getRedirectStats($redirectCode): JsonResponse
+    {
+        $redirect = Redirect::findFromCode($redirectCode);
+        return response()->json($redirect->redirectLogs);
     }
 }

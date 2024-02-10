@@ -17,12 +17,14 @@ class Redirect extends Model
 
     protected $fillable = ['url', 'status'];
 
-    protected function id() : Attribute
-    {
-        return Attribute::make(
-            get: fn (string $value) => FacadesHashids::encode($value),
-        );
-    }
+    protected   $hidden = ['id'];
+
+    // protected function id() : Attribute
+    // {
+    //     return Attribute::make(
+    //         get: fn (string $value) => FacadesHashids::encode($value),
+    //     );
+    // }
 
     function getOriginalId()
     {
@@ -38,5 +40,12 @@ class Redirect extends Model
     public function redirectLogs(): HasMany
     {
         return $this->hasMany(RedirectLog::class);
+    }
+
+    protected static function booted()
+    {
+        static::retrieved(function ($model) {
+            $model->code = FacadesHashids::encode($model->id);
+        });
     }
 }
