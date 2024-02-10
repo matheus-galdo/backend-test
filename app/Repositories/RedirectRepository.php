@@ -26,8 +26,6 @@ class RedirectRepository
     public function create(array $data)
     {
         return $this->redirectModel->create($data);
-        $this->redirectModel->code = Hashids::encode($this->redirectModel->id);
-        $this->redirectModel->save();
     }
 
     public function update(Redirect $redirectModel, array $data)
