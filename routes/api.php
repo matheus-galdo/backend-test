@@ -17,7 +17,7 @@ use App\Http\Controllers\RedirectController;
 
 
 Route::group(['prefix' => 'redirects'], function () {
-    Route::apiResource('/', RedirectController::class)->except(['update'])->parameters(['' => 'redirectCode']);
+    Route::apiResource('/', RedirectController::class)->except(['update', 'show'])->parameters(['' => 'redirectCode']);
     Route::patch('/{redirect:code}', [RedirectController::class, 'update']);
     
     Route::get('/{redirect:code}/logs', [RedirectController::class, 'getRedirectLogs']);

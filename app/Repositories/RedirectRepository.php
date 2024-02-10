@@ -5,6 +5,7 @@ namespace App\Repositories;
 use App\Models\Redirect;
 use App\Models\RedirectLog;
 use Illuminate\Support\Facades\DB;
+use Vinkla\Hashids\Facades\Hashids;
 
 class RedirectRepository
 {
@@ -25,6 +26,8 @@ class RedirectRepository
     public function create(array $data)
     {
         return $this->redirectModel->create($data);
+        $this->redirectModel->code = Hashids::encode($this->redirectModel->id);
+        $this->redirectModel->save();
     }
 
     public function update(Redirect $redirectModel, array $data)
@@ -77,7 +80,6 @@ class RedirectRepository
 
     function getLast10DaysLogs(Redirect $redirectModel)
     {
-        //TODO: aqui
         return RedirectLog::where('redirect_id', $redirectModel->id)
             ->whereDate('created_at', '>=', now()->subDays(10)->toDateString())
             ->selectRaw('DATE(created_at) as date, COUNT(*) as total, COUNT(DISTINCT ip_address) as unique')

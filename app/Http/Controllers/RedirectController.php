@@ -53,17 +53,6 @@ class RedirectController extends Controller
     }
 
     /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
-    {
-        //
-    }
-
-    /**
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
@@ -82,9 +71,7 @@ class RedirectController extends Controller
             $partialRedirect['status'] = $request->status;
         }
 
-
         $redirect = $this->redirectService->updateRedirect($redirect, $partialRedirect);
-
         return response()->json(null, $redirect ? Response::HTTP_OK : Response::HTTP_UNPROCESSABLE_ENTITY);
     }
 
