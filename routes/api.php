@@ -17,11 +17,12 @@ use App\Http\Controllers\RedirectController;
 
 
 Route::group(['prefix' => 'redirects'], function () {
-    Route::apiResource('/', RedirectController::class)->parameters(['' => 'redirectCode']);
+    Route::apiResource('/', RedirectController::class)->except(['update'])->parameters(['' => 'redirectCode']);
+    Route::patch('/{redirect}', [RedirectController::class, 'update']);
 
     Route::get('/{redirect}/stats', function (Request $request) {
         return response('ok');
     });
 
-    Route::get('/{redirect}/logs', [RedirectController::class, 'getRedirectStats']);
+    Route::get('/{redirect}/logs', [RedirectController::class, 'getRedirectLogs']);
 });

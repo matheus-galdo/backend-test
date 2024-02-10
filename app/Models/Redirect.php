@@ -17,20 +17,14 @@ class Redirect extends Model
 
     protected $fillable = ['url', 'status'];
 
-    protected   $hidden = ['id'];
+    protected $hidden = ['id'];
 
-    // protected function id() : Attribute
-    // {
-    //     return Attribute::make(
-    //         get: fn (string $value) => FacadesHashids::encode($value),
-    //     );
-    // }
-
-    function getOriginalId()
+    function getId()
     {
-        return $this->id = Hashids::decode($this->id)[0] ?? null;
+        return $this->id;
     }
-    
+
+    //TODO: colocar num service?
     public static function findFromCode($redirectCode)
     {
         $redirectId = Hashids::decode($redirectCode)[0] ?? null;

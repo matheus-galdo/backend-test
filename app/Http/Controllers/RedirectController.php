@@ -20,9 +20,9 @@ class RedirectController extends Controller
      */
     public function index()
     {
-        // TODO: fazer resource que muda o nome de id pra code
-        // TODO: pegar o último acesso, coluna de último acesso na tabela de redirect?
-        $redirect = Redirect::withTrashed()->get();
+        $redirect = Redirect::with(['redirectLogs' => function ($builder) {
+            $builder->latest()->limit(1);
+        }])->get();
         return response()->json($redirect);
     }
 
@@ -63,18 +63,8 @@ class RedirectController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
-    }
-
-    /**
-     * Toggle the status of the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function toggleStatus($id)
-    {
-        //TODO: checar estado de deleção antes de fazer o toggle
+        //aceita url
+        //status
     }
 
     /**
@@ -89,7 +79,7 @@ class RedirectController extends Controller
         $queryStrings = http_build_query($request->query());
 
         RedirectLog::create([
-            "redirect_id" => $redirect->getOriginalId(),
+            "redirect_id" => $redirect->getId(),
             "ip_address" => $request->ip(),
             "query_params" => $queryStrings,
             "user_agent" => $request->header("user-agent"),
@@ -121,14 +111,20 @@ class RedirectController extends Controller
     {
         //TODO: fazer DI dessa model
         $redirect = Redirect::findFromCode($redirectCode);
+        //TODO: transaction?
         $redirect->update(["status" => "inactive"]);
         $redirect->delete();
         return response($redirect);
     }
 
-    function getRedirectStats($redirectCode): JsonResponse
+    function getRedirectLogs($redirectCode): JsonResponse
     {
         $redirect = Redirect::findFromCode($redirectCode);
         return response()->json($redirect->redirectLogs);
+    }
+
+    function getRedirectStats()
+    {
+        //
     }
 }
