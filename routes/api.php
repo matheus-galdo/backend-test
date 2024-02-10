@@ -2,6 +2,7 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\RedirectController;
 
 /*
 |--------------------------------------------------------------------------
@@ -14,6 +15,14 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+
+Route::group(['prefix' => 'redirects'], function () {
+    Route::apiResource('/', RedirectController::class)->except(['update'])->parameters(['' => 'redirectCode']);
+    Route::patch('/{redirect:code}', [RedirectController::class, 'update']);
+
+    Route::get('/{redirect:code}/stats', function (Request $request) {
+        return response('ok');
+    });
+
+    Route::get('/{redirect:code}/logs', [RedirectController::class, 'getRedirectLogs']);
 });
