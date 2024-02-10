@@ -4,17 +4,31 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CreateRedirectRequest;
 use App\Http\Requests\UpdateRedirectRequest;
+use App\Services\RedirectService;
+use App\Repositories\RedirectRepository;
 use App\Models\Redirect;
 use App\Models\RedirectLog;
+use App\Repositories\RedirectLogRepository;
+use App\Services\RedirectLogService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
-use Vinkla\Hashids\Facades\Hashids;
 
 class RedirectController extends Controller
 {
+    protected $redirectRepository;
+    protected $redirectLogRepository;
+    protected $redirectService;
+
+    public function __construct(RedirectRepository $redirectRepository, RedirectLogRepository $redirectLogRepository)
+    {
+        $this->redirectRepository = $redirectRepository;
+        $this->redirectService = new RedirectService($this->redirectRepository);
+        $this->redirectLogRepository = $redirectLogRepository;
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -22,10 +36,8 @@ class RedirectController extends Controller
      */
     public function index()
     {
-        $redirect = Redirect::with(['redirectLogs' => function ($builder) {
-            $builder->latest()->limit(1);
-        }])->get();
-        return response()->json($redirect);
+        $redirects = $this->redirectService->getAllRedirects();
+        return response()->json($redirects);
     }
 
     /**
@@ -36,13 +48,8 @@ class RedirectController extends Controller
      */
     public function store(CreateRedirectRequest $request)
     {
-        //TODO: Validar se aponta pra própria aplicação, usar env com o host do app
-        $redirect = Redirect::create([
-            'url' => $request->url,
-            'status' => 'active',
-        ]);
-
-        return response()->json($redirect);
+        $redirect = $this->redirectService->createRedirect($request->url);
+        return response()->json($redirect, Response::HTTP_CREATED);
     }
 
     /**
@@ -75,11 +82,10 @@ class RedirectController extends Controller
             $partialRedirect['status'] = $request->status;
         }
 
-        if (!empty($partialRedirect)) {
-            $redirect->update($partialRedirect);
-        }
 
-        return response()->json($redirect);
+        $redirect = $this->redirectService->updateRedirect($redirect, $partialRedirect);
+
+        return response()->json(null, $redirect ? Response::HTTP_OK : Response::HTTP_UNPROCESSABLE_ENTITY);
     }
 
     /**
@@ -92,26 +98,18 @@ class RedirectController extends Controller
     {
         $queryStrings = http_build_query($request->query());
 
-        RedirectLog::create([
+        $redirectLogData = [
             'redirect_id' => $redirect->getId(),
             'ip_address' => $request->ip(),
             'query_params' => $queryStrings,
             'user_agent' => $request->header('user-agent'),
             'referer' => $request->header('referer'),
-        ]);
+        ];
 
-        $fullUrl = $redirect->url;
+        $redirectLogService = new RedirectLogService($this->redirectLogRepository);
+        $redirectService = new RedirectService($this->redirectRepository, $redirectLogService);
 
-        if (strlen($queryStrings) > 0) {
-            $hasQueryParams = str_contains($redirect->url, '?');
-
-            if (!$hasQueryParams) {
-                $fullUrl .= '?';
-            }
-
-            $fullUrl .= $queryStrings;
-        }
-
+        $fullUrl = $redirectService->accessRedirectUrl($redirect, $redirectLogData);
         return redirect()->away($fullUrl);
     }
 
@@ -123,44 +121,19 @@ class RedirectController extends Controller
      */
     public function destroy(Redirect $redirect): Response
     {
-        //TODO: transaction?
-        $redirect->update(['status' => 'inactive']);
-        $redirect->delete();
+        $redirect = $this->redirectService->deleteRedirect($redirect);
         return response($redirect);
     }
 
     function getRedirectLogs(Redirect $redirect): JsonResponse
     {
-        return response()->json($redirect->redirectLogs);
+        $redirectLogs = $this->redirectService->getRedirectLogs($redirect);
+        return response()->json($redirectLogs);
     }
 
     function getRedirectStats(Redirect $redirect)
     {
-        $topReferers = $redirect->redirectLogs()
-        ->select('referer', DB::raw('COUNT(*) as count'))
-        ->groupBy('referer')
-        ->orderByDesc('count')
-        ->take(1)
-        ->get();
-
-        $totalRedirectLogs = $redirect->redirectLogs->count();
-
-        $uniqueIpsRedirectLogs = $redirect->redirectLogs()->distinct('ip_address')->count('ip');
-
-        $last10DaysLogs = RedirectLog::where('redirect_id', $redirect->id)
-            ->whereDate('created_at', '>=', now()->subDays(10)->toDateString())
-            ->selectRaw('DATE(created_at) as date, COUNT(*) as total, COUNT(DISTINCT ip_address) as unique')
-            ->groupBy('date')
-            ->orderBy('date')
-            ->get();
-
-        $stats = [
-            'totalRedirectLogs' => $totalRedirectLogs,
-            'uniqueIpsRedirectLogs' => $uniqueIpsRedirectLogs,
-            'top_referrers' => $topReferers,
-            'last10DaysLogs' => $last10DaysLogs,
-        ];
-
-        return response()->json($stats);
+        $redirectStats = $this->redirectService->getRedirectStats($redirect);
+        return response()->json($redirectStats);
     }
 }
