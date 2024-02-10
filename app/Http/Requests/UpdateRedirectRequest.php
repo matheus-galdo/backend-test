@@ -4,8 +4,9 @@ namespace App\Http\Requests;
 
 use App\Rules\ValidUrlRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
-class CreateRedirectRequest extends FormRequest
+class UpdateRedirectRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -25,7 +26,8 @@ class CreateRedirectRequest extends FormRequest
     public function rules()
     {
         return [
-            'url' => ['required', 'url:https', 'starts_with:https', new ValidUrlRule()],
+            'url' => ['url:https', 'starts_with:https', new ValidUrlRule()],
+            'status' => ['string', Rule::in(['active', 'inactive'])],
         ];
     }
 }

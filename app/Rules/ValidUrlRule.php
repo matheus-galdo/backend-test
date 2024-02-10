@@ -6,7 +6,7 @@ use GuzzleHttp\Client;
 use Illuminate\Contracts\Validation\Rule;
 use Symfony\Component\HttpFoundation\Response;
 
-class ValidUrlRul implements Rule
+class ValidUrlRule implements Rule
 {
     /**
      * Create a new rule instance.
@@ -28,7 +28,7 @@ class ValidUrlRul implements Rule
     public function passes($attribute, $value)
     {
         $client = new Client();
-        $response = $client->get($value, ["http_errors" => false]);
+        $response = $client->get($value, ['http_errors' => false]);
         return $response->getStatusCode() == Response::HTTP_OK || $response->getStatusCode() == Response::HTTP_CREATED;
     }
 

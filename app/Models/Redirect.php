@@ -24,13 +24,6 @@ class Redirect extends Model
         return $this->id;
     }
 
-    //TODO: colocar num service?
-    public static function findFromCode($redirectCode)
-    {
-        $redirectId = Hashids::decode($redirectCode)[0] ?? null;
-        return self::findOrFail($redirectId);
-    }
-
     public function redirectLogs(): HasMany
     {
         return $this->hasMany(RedirectLog::class);

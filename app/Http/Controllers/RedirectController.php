@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\CreateRedirectRequest;
+use App\Http\Requests\UpdateRedirectRequest;
 use App\Models\Redirect;
 use App\Models\RedirectLog;
 use Illuminate\Http\JsonResponse;
@@ -36,8 +37,8 @@ class RedirectController extends Controller
     {
         //TODO: Validar se aponta pra própria aplicação, usar env com o host do app
         $redirect = Redirect::create([
-            "url" => $request->url,
-            "status" => "active",
+            'url' => $request->url,
+            'status' => 'active',
         ]);
 
         return response()->json($redirect);
@@ -61,10 +62,23 @@ class RedirectController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(UpdateRedirectRequest $request, Redirect $redirect)
     {
-        //aceita url
-        //status
+        $partialRedirect = [];
+
+        if ($request->url) {
+            $partialRedirect['url'] = $request->url;
+        }
+
+        if ($request->status) {
+            $partialRedirect['status'] = $request->status;
+        }
+
+        if (!empty($partialRedirect)) {
+            $redirect->update($partialRedirect);
+        }
+        
+        return response()->json($redirect);
     }
 
     /**
@@ -73,26 +87,25 @@ class RedirectController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function accessRedirectUrl(Request $request, $redirectCode): RedirectResponse
+    public function accessRedirectUrl(Request $request, Redirect $redirect): RedirectResponse
     {
-        $redirect = Redirect::findFromCode($redirectCode);
         $queryStrings = http_build_query($request->query());
 
         RedirectLog::create([
-            "redirect_id" => $redirect->getId(),
-            "ip_address" => $request->ip(),
-            "query_params" => $queryStrings,
-            "user_agent" => $request->header("user-agent"),
-            "referer" => $request->header("referer"),
+            'redirect_id' => $redirect->getId(),
+            'ip_address' => $request->ip(),
+            'query_params' => $queryStrings,
+            'user_agent' => $request->header('user-agent'),
+            'referer' => $request->header('referer'),
         ]);
 
         $fullUrl = $redirect->url;
 
         if (strlen($queryStrings) > 0) {
-            $hasQueryParams = str_contains($redirect->url, "?");
+            $hasQueryParams = str_contains($redirect->url, '?');
 
             if (!$hasQueryParams) {
-                $fullUrl .= "?";
+                $fullUrl .= '?';
             }
 
             $fullUrl .= $queryStrings;
@@ -107,23 +120,20 @@ class RedirectController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($redirectCode): Response
+    public function destroy(Redirect $redirect): Response
     {
-        //TODO: fazer DI dessa model
-        $redirect = Redirect::findFromCode($redirectCode);
         //TODO: transaction?
-        $redirect->update(["status" => "inactive"]);
+        $redirect->update(['status' => 'inactive']);
         $redirect->delete();
         return response($redirect);
     }
 
-    function getRedirectLogs($redirectCode): JsonResponse
+    function getRedirectLogs(Redirect $redirect): JsonResponse
     {
-        $redirect = Redirect::findFromCode($redirectCode);
         return response()->json($redirect->redirectLogs);
     }
 
-    function getRedirectStats()
+    function getRedirectStats(Redirect $redirect)
     {
         //
     }
