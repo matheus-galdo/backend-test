@@ -18,4 +18,4 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/r/{redirect}', [RedirectController::class,'accessRedirectUrl']);
+Route::get('/r/{redirect:code}', [RedirectController::class,'accessRedirectUrl']);

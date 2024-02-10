@@ -10,6 +10,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
 use Vinkla\Hashids\Facades\Hashids;
 
 class RedirectController extends Controller
@@ -77,7 +78,7 @@ class RedirectController extends Controller
         if (!empty($partialRedirect)) {
             $redirect->update($partialRedirect);
         }
-        
+
         return response()->json($redirect);
     }
 
@@ -135,6 +136,31 @@ class RedirectController extends Controller
 
     function getRedirectStats(Redirect $redirect)
     {
-        //
+        $topReferers = $redirect->redirectLogs()
+        ->select('referer', DB::raw('COUNT(*) as count'))
+        ->groupBy('referer')
+        ->orderByDesc('count')
+        ->take(1)
+        ->get();
+
+        $totalRedirectLogs = $redirect->redirectLogs->count();
+
+        $uniqueIpsRedirectLogs = $redirect->redirectLogs()->distinct('ip_address')->count('ip');
+
+        $last10DaysLogs = RedirectLog::where('redirect_id', $redirect->id)
+            ->whereDate('created_at', '>=', now()->subDays(10)->toDateString())
+            ->selectRaw('DATE(created_at) as date, COUNT(*) as total, COUNT(DISTINCT ip_address) as unique')
+            ->groupBy('date')
+            ->orderBy('date')
+            ->get();
+
+        $stats = [
+            'totalRedirectLogs' => $totalRedirectLogs,
+            'uniqueIpsRedirectLogs' => $uniqueIpsRedirectLogs,
+            'top_referrers' => $topReferers,
+            'last10DaysLogs' => $last10DaysLogs,
+        ];
+
+        return response()->json($stats);
     }
 }
