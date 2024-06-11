@@ -2,13 +2,30 @@ FROM composer as vendor
 
 WORKDIR /app
 
-COPY ./composer.* .
+COPY . .
+
+RUN composer update
+# CMD [ "composer", "update"]
 
 
 FROM php:8.3-fpm-alpine
 
 WORKDIR /app
 
-COPY . .
+EXPOSE 8000
 
-CMD [ "php", "artisan", "serve" ]
+COPY --from=vendor /app .
+
+RUN set -ex \
+  && apk --no-cache add \
+    postgresql-dev \ 
+    gmp-dev
+
+RUN docker-php-ext-install \
+    pgsql \
+    pdo_pgsql \
+    gmp
+
+RUN php artisan key:generate
+
+CMD php artisan serve --host=0.0.0.0
