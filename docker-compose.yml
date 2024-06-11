@@ -1,0 +1,9 @@
+services:
+   php:
+       image: php:8.1-fpm-alpine
+   apache:
+       image: apache
+       ports:
+           - 80
+       links:
+           - php
